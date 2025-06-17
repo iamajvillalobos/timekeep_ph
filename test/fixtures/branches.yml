@@ -1,0 +1,23 @@
+acme_downtown:
+  name: "Downtown Office"
+  address: "123 Main St, Downtown, City"
+  account: acme_corp
+  active: true
+
+acme_uptown:
+  name: "Uptown Branch"
+  address: "456 Oak Ave, Uptown, City"
+  account: acme_corp
+  active: true
+
+acme_closed:
+  name: "Closed Location"
+  address: "789 Pine St, Old District, City"
+  account: acme_corp
+  active: false
+
+tech_main:
+  name: "Main Office"
+  address: "101 Tech Blvd, Innovation District, City"
+  account: tech_startup
+  active: true

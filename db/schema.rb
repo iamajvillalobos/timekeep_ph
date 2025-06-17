@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_17_103321) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_17_104405) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -22,6 +22,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_17_103321) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["subdomain"], name: "index_accounts_on_subdomain", unique: true
+  end
+
+  create_table "branches", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "account_id", null: false
+    t.string "name", null: false
+    t.string "address", null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_branches_on_account_id"
   end
 
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -40,5 +50,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_17_103321) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "branches", "accounts"
   add_foreign_key "users", "accounts"
 end
