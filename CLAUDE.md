@@ -61,11 +61,13 @@ TimekeepPh is a Rails 8.0 application using:
 - **ClockEntry**: Time records with GPS coordinates, selfie URLs, and offline sync tracking (UUID primary key)
 
 ### Key Configuration Files
-- `config/routes.rb` - Application routes (currently minimal with health check)
+- `config/routes.rb` - Application routes (root, devise, employee auth, clock-in)
 - `config/database.yml` - Database configuration
 - `config/deploy.yml` - Kamal deployment configuration
+- `config/application.rb` - Multi-tenant middleware configuration
 - `Procfile.dev` - Development processes (web server + CSS watcher)
 - `.rubocop.yml` - Code style configuration (inherits from rails-omakase)
+- `db/seeds.rb` - Demo data for 3 companies with users, branches, and employees
 
 ### Asset Pipeline
 - Uses Propshaft for asset pipeline
@@ -120,17 +122,17 @@ This project follows principles from "Sustainable Rails" by David Bryant Copelan
 
 ## Current Feature Implementation Status
 
-### Multi-tenant Foundation
+### Multi-tenant Foundation ✅ COMPLETED
 - [x] UUID primary keys configured
 - [x] Account model (companies/organizations)
 - [x] User model (HR/admin backend access)
-- [ ] Tenant scoping middleware
-- [ ] Subdomain routing
+- [x] Tenant scoping middleware (TenantScopeMiddleware + Current attributes)
+- [x] Subdomain routing (acme-corp.localhost:3000, tech-startup.localhost:3000, etc.)
 
-### Employee Management
+### Employee Management ✅ COMPLETED
 - [x] Branch model (physical locations)
 - [x] Employee model (workers)
-- [ ] Employee authentication system
+- [x] Employee authentication system (PIN-based with tenant isolation)
 
 ### Clock-in System (User Story U1)
 - [x] ClockEntry model
@@ -142,13 +144,13 @@ This project follows principles from "Sustainable Rails" by David Bryant Copelan
 ### Service Objects
 - [ ] `ClockInService` - Handles camera, GPS, validation
 - [ ] `OfflineSyncService` - Local storage and sync
-- [ ] `TenantService` - Account scoping
+- [x] `TenantService` - Account scoping (implemented via TenantScopeMiddleware)
 
-### Security & Authorization
-- [x] Devise authentication for Users
-- [ ] Employee PIN-based identification
-- [ ] Tenant isolation validation
-- [ ] Strong parameters and validation
+### Security & Authorization ✅ COMPLETED
+- [x] Devise authentication for Users (backend access)
+- [x] Employee PIN-based identification (frontend worker access)
+- [x] Tenant isolation validation (middleware enforces account boundaries)
+- [x] Strong parameters and validation (comprehensive model validations)
 
 ## Maintenance Instructions
 
@@ -162,3 +164,33 @@ This project follows principles from "Sustainable Rails" by David Bryant Copelan
 6. **Update routes** in Key Configuration Files when changed
 
 This ensures CLAUDE.md stays current and useful for future development sessions.
+
+## Demo Data & Testing
+
+### Demo Accounts Available
+Run `bin/rails db:seed` to create sample data:
+
+1. **Acme Corporation** (`acme-corp`)
+   - Admin: admin@acme-corp.com / password123
+   - HR: hr@acme-corp.com / password123
+   - Employees: EMP001 (PIN: 1234), EMP002 (PIN: 5678), EMP003 (PIN: 9999)
+
+2. **Tech Startup Inc** (`tech-startup`)
+   - Admin: admin@tech-startup.com / password123
+   - Employees: DEV001 (PIN: 4321), DEV002 (PIN: 2468)
+
+3. **Retail Chain LLC** (`retail-chain`)
+   - Manager: manager@retail-chain.com / password123
+   - Employees: RET001 (PIN: 1111), RET002 (PIN: 3333)
+
+### Testing Multi-tenancy Locally
+Use subdomain URLs to test tenant isolation:
+- `acme-corp.localhost:3000` - Acme Corporation tenant
+- `tech-startup.localhost:3000` - Tech Startup tenant  
+- `retail-chain.localhost:3000` - Retail Chain tenant
+- `localhost:3000` - Main application (no tenant)
+
+### Authentication Testing
+- **Backend Access**: Visit root URL (redirects to sign-in if not authenticated)
+- **Employee Access**: Visit `/employee/login` on any tenant subdomain
+- **Tenant Isolation**: Users/employees from one tenant cannot access another tenant's data
