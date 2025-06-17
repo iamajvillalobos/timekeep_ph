@@ -1,20 +1,20 @@
 acme_admin:
   name: "Alice Admin"
   email: "alice@acme-corp.com"
-  encrypted_password: <%= Devise::Encryptor.digest(User, 'password123') %>
+  encrypted_password: "$2a$04$abcdefghijklmnopqrstuv0123456789012345678901"
   account: acme_corp
   role: admin
 
 acme_hr:
   name: "Bob HR"
   email: "bob@acme-corp.com"
-  encrypted_password: <%= Devise::Encryptor.digest(User, 'password123') %>
+  encrypted_password: "$2a$04$abcdefghijklmnopqrstuv0123456789012345678901"
   account: acme_corp
   role: hr
 
 tech_admin:
   name: "Carol Admin"
   email: "carol@tech-startup.com"
-  encrypted_password: <%= Devise::Encryptor.digest(User, 'password123') %>
+  encrypted_password: "$2a$04$abcdefghijklmnopqrstuv0123456789012345678901"
   account: tech_startup
   role: admin
