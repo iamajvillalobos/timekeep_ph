@@ -4,8 +4,8 @@ class Account < ApplicationRecord
   has_many :employees, dependent: :destroy
   has_many :clock_entries, through: :employees
   
-  normalize_attribute :subdomain, with: -> subdomain { subdomain.strip.downcase }
-  normalize_attribute :name, with: -> name { name.strip }
+  normalizes :subdomain, with: -> subdomain { subdomain.strip.downcase }
+  normalizes :name, with: -> name { name.strip }
   
   validates :name, presence: true
   validates :subdomain, presence: true, uniqueness: true, format: { with: /\A[a-z0-9\-]+\z/ }

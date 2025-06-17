@@ -1,11 +1,14 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+acme_corp:
+  name: "Acme Corporation"
+  subdomain: "acme-corp"
+  active: true
 
-one:
-  name: MyString
-  subdomain: MyString
-  active: false
+tech_startup:
+  name: "Tech Startup Inc"  
+  subdomain: "tech-startup"
+  active: true
 
-two:
-  name: MyString
-  subdomain: MyString
+inactive_company:
+  name: "Inactive Company"
+  subdomain: "inactive-co"
   active: false
