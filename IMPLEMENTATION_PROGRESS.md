@@ -28,9 +28,10 @@ Account (Company/Organization) - UUID primary key
 ## Implementation Status
 
 ### Phase 1: Database Models & Migrations
-- [ ] Configure Rails to use UUIDs as primary keys
-- [ ] Account model (with subdomain for tenant identification)
-- [ ] User model (with authentication, scoped by account_id)
+- [x] Configure Rails to use UUIDs as primary keys
+- [x] Account model (with subdomain for tenant identification)
+- [x] Account model comprehensive TDD tests
+- [🔄] User model (with authentication, scoped by account_id) - TDD tests written, model in progress
 - [ ] Branch model (scoped by account_id)
 - [ ] Employee model (scoped by account_id)
 - [ ] ClockEntry model (scoped through employee)
@@ -73,7 +74,7 @@ Starting with UUID configuration and Account model creation...
 
 ## Models Schema Design
 
-### Account
+### Account ✅ IMPLEMENTED
 ```ruby
 # Multi-tenant company/organization (UUID primary key)
 class Account < ApplicationRecord
@@ -81,41 +82,40 @@ class Account < ApplicationRecord
   has_many :branches, dependent: :destroy
   has_many :employees, dependent: :destroy
   has_many :clock_entries, through: :employees
-  
-  # Rails 8 attribute normalization
-  normalize_attribute :subdomain, with: -> subdomain { subdomain.strip.downcase }
-  normalize_attribute :name, with: -> name { name.strip }
-  
+
+  normalizes :subdomain, with: ->(subdomain) { subdomain.strip.downcase }
+  normalizes :name, with: ->(name) { name.strip }
+
   validates :name, presence: true
   validates :subdomain, presence: true, uniqueness: true, format: { with: /\A[a-z0-9\-]+\z/ }
+
+  scope :active, -> { where(active: true) }
 end
 ```
 
-### User
+### User 🔄 IN PROGRESS
 ```ruby
 # Backend access (HR, Admins, Managers) - UUID primary key
 class User < ApplicationRecord
   belongs_to :account
   
-  # Rails 8 attribute normalization
-  normalize_attribute :email, with: -> email { email.strip.downcase }
-  normalize_attribute :name, with: -> name { name.strip }
+  normalizes :email, with: ->(email) { email.strip.downcase }
+  normalizes :name, with: ->(name) { name.strip }
   
-  # Will use Devise for authentication
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
   
   enum role: { admin: 0, hr: 1, manager: 2 }
   
+  validates :name, presence: true
   validates :email, presence: true, uniqueness: { scope: :account_id }
   validates :role, presence: true
   
-  # Scope all queries to account
   scope :for_account, ->(account) { where(account: account) }
 end
 ```
 
-### Branch
+### Branch ⏳ PENDING
 ```ruby
 # Physical locations where employees work - UUID primary key
 class Branch < ApplicationRecord
@@ -131,7 +131,7 @@ class Branch < ApplicationRecord
 end
 ```
 
-### Employee
+### Employee ⏳ PENDING
 ```ruby
 # Workers who clock in/out - UUID primary key
 class Employee < ApplicationRecord
@@ -139,10 +139,9 @@ class Employee < ApplicationRecord
   belongs_to :branch
   has_many :clock_entries, dependent: :destroy
   
-  # Rails 8 attribute normalization
-  normalize_attribute :name, with: -> name { name.strip }
-  normalize_attribute :email, with: -> email { email&.strip&.downcase }
-  normalize_attribute :employee_id, with: -> id { id.strip.upcase }
+  normalizes :name, with: ->(name) { name.strip }
+  normalizes :email, with: ->(email) { email&.strip&.downcase }
+  normalizes :employee_id, with: ->(id) { id.strip.upcase }
   
   validates :name, presence: true
   validates :employee_id, presence: true, uniqueness: { scope: :account_id }
@@ -151,7 +150,6 @@ class Employee < ApplicationRecord
   scope :active, -> { where(active: true) }
   scope :for_account, ->(account) { where(account: account) }
   
-  # Ensure branch belongs to same account
   validate :branch_belongs_to_account
   
   private
@@ -163,7 +161,7 @@ class Employee < ApplicationRecord
 end
 ```
 
-### ClockEntry
+### ClockEntry ⏳ PENDING
 ```ruby
 # Time records with photos and GPS - UUID primary key
 class ClockEntry < ApplicationRecord
@@ -179,7 +177,6 @@ class ClockEntry < ApplicationRecord
   scope :today, -> { where(created_at: Date.current.beginning_of_day..Date.current.end_of_day) }
   scope :for_account, ->(account) { joins(employee: :account).where(employees: { account: account }) }
   
-  # Ensure employee and branch belong to same account
   validate :employee_and_branch_same_account
   
   private
