@@ -6,6 +6,9 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
+# Require custom middleware
+require_relative "../app/middleware/tenant_scope_middleware"
+
 module TimekeepPh
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
@@ -23,5 +26,8 @@ module TimekeepPh
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # Multi-tenant middleware
+    config.middleware.insert_before ActionDispatch::Session::CookieStore, TenantScopeMiddleware
   end
 end
