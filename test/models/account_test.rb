@@ -36,8 +36,8 @@ class AccountTest < ActiveSupport::TestCase
   end
 
   test "should validate subdomain format" do
-    invalid_subdomains = ["test_company", "test company", "test.company", ""]
-    
+    invalid_subdomains = [ "test_company", "test company", "test.company", "" ]
+
     invalid_subdomains.each do |subdomain|
       account = Account.new(name: "Test Company", subdomain: subdomain)
       assert_not account.valid?, "#{subdomain} should be invalid"
@@ -46,8 +46,8 @@ class AccountTest < ActiveSupport::TestCase
   end
 
   test "should allow valid subdomain formats" do
-    valid_subdomains = ["test-company", "test123", "company-1", "a", "123"]
-    
+    valid_subdomains = [ "test-company", "test123", "company-1", "a", "123" ]
+
     valid_subdomains.each_with_index do |subdomain, index|
       account = Account.new(name: "Test Company #{index}", subdomain: subdomain)
       assert account.valid?, "#{subdomain} should be valid but got errors: #{account.errors.full_messages}"
@@ -74,7 +74,7 @@ class AccountTest < ActiveSupport::TestCase
   test "should have associations defined for future models" do
     account = accounts(:acme_corp)
     assert_respond_to account, :users
-    assert_respond_to account, :branches  
+    assert_respond_to account, :branches
     assert_respond_to account, :employees
     assert_respond_to account, :clock_entries
   end

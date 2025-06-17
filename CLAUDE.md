@@ -89,6 +89,8 @@ TimekeepPh is a Rails 8.0 application using:
 - **Use Conventional Commits format**: `type(scope): description`
 - **Commit in workable chunks** - each commit should be a complete, testable unit
 - **Never add Claude Code comments** - code should be self-documenting
+- **ALWAYS run `bin/rubocop` before committing** - fix all style issues
+- **ALWAYS run tests before committing** - ensure nothing is broken
 - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 - Example: `feat(models): add UUID primary key configuration`
 
