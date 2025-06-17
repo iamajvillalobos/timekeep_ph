@@ -9,8 +9,9 @@ Rails.application.routes.draw do
   post "employee/authenticate", to: "employees#authenticate", as: "employee_authenticate"
   delete "employee/logout", to: "employees#logout", as: "employee_logout"
 
-  # Clock-in routes (placeholder for now)
-  get "clock-in", to: "home#index", as: "clock_in"
+  # Clock-in routes - selfie with GPS
+  get "clock-in", to: "clock_in#show", as: "clock_in"
+  post "clock-in", to: "clock_in#create", as: "create_clock_entry"
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
