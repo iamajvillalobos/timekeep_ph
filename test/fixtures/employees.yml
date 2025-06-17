@@ -1,0 +1,35 @@
+acme_john:
+  name: "John Smith"
+  employee_id: "EMP001"
+  pin: "1234"
+  email: "john.smith@acme-corp.com"
+  account: acme_corp
+  branch: acme_downtown
+  active: true
+
+acme_jane:
+  name: "Jane Wilson"
+  employee_id: "EMP002"
+  pin: "5678"
+  email: "jane.wilson@acme-corp.com"
+  account: acme_corp
+  branch: acme_uptown
+  active: true
+
+acme_inactive:
+  name: "Bob Inactive"
+  employee_id: "EMP003"
+  pin: "9999"
+  email: "bob.inactive@acme-corp.com"
+  account: acme_corp
+  branch: acme_downtown
+  active: false
+
+tech_bob:
+  name: "Bob Developer"
+  employee_id: "DEV001"
+  pin: "4321"
+  email: "bob.dev@tech-startup.com"
+  account: tech_startup
+  branch: tech_main
+  active: true
