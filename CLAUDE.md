@@ -80,6 +80,18 @@ TimekeepPh is a Rails 8.0 application using:
 
 ## Development Guidelines
 
+### Rails API Reference
+- **ALWAYS use the latest Rails 8.0 methods** from https://api.rubyonrails.org/
+- Reference the official API docs for current syntax and best practices
+- Prefer new Rails 8 features over legacy approaches
+
+### Git Commit Standards
+- **Use Conventional Commits format**: `type(scope): description`
+- **Commit in workable chunks** - each commit should be a complete, testable unit
+- **Never add Claude Code comments** - code should be self-documenting
+- Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
+- Example: `feat(models): add UUID primary key configuration`
+
 ### Sustainable Rails Practices
 This project follows principles from "Sustainable Rails" by David Bryant Copeland (see `sustainable-rails.md`):
 
