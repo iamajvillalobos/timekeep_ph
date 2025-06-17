@@ -77,3 +77,67 @@ TimekeepPh is a Rails 8.0 application using:
 - Integration tests: `test/integration/`
 - Test helpers: `test/helpers/`
 - Fixtures: `test/fixtures/`
+
+## Development Guidelines
+
+### Sustainable Rails Practices
+This project follows principles from "Sustainable Rails" by David Bryant Copeland (see `sustainable-rails.md`):
+
+- **Boring Technology**: Prefer Rails conventions and well-established patterns
+- **Business Logic**: Keep complex logic in service objects and form objects, not controllers/models
+- **Database Design**: Use proper constraints, indexes, and validation at the database level
+- **Testing**: Write focused unit tests and comprehensive system tests
+- **Views**: Use ViewComponent for reusable UI components when complexity warrants
+- **Jobs**: Use ActiveJob with Solid Queue for background processing
+- **Security**: Follow Rails security best practices, use strong parameters, validate at multiple levels
+
+### Multi-tenant Architecture Guidelines
+- Always scope queries by `account_id` to prevent data leakage
+- Use UUIDs for all public-facing IDs to prevent enumeration
+- Implement proper authorization checks at controller level
+- Test tenant isolation thoroughly
+
+## Current Feature Implementation Status
+
+### Multi-tenant Foundation
+- [ ] UUID primary keys configured
+- [ ] Account model (companies/organizations)
+- [ ] User model (HR/admin backend access)
+- [ ] Tenant scoping middleware
+- [ ] Subdomain routing
+
+### Employee Management
+- [ ] Branch model (physical locations)
+- [ ] Employee model (workers)
+- [ ] Employee authentication system
+
+### Clock-in System (User Story U1)
+- [ ] ClockEntry model
+- [ ] Clock-in controller with camera/GPS
+- [ ] Offline storage (IndexedDB)
+- [ ] Auto-sync functionality
+- [ ] Selfie capture with branch locking
+
+### Service Objects
+- [ ] `ClockInService` - Handles camera, GPS, validation
+- [ ] `OfflineSyncService` - Local storage and sync
+- [ ] `TenantService` - Account scoping
+
+### Security & Authorization
+- [ ] Devise authentication for Users
+- [ ] Employee PIN-based identification
+- [ ] Tenant isolation validation
+- [ ] Strong parameters and validation
+
+## Maintenance Instructions
+
+**IMPORTANT**: When adding new features, models, controllers, or significant changes:
+
+1. **Update the Architecture section** with new components
+2. **Add new models/controllers** to the relevant sections
+3. **Update Feature Implementation Status** checkboxes
+4. **Add new commands** to Development Commands if needed
+5. **Document new service objects** in the guidelines
+6. **Update routes** in Key Configuration Files when changed
+
+This ensures CLAUDE.md stays current and useful for future development sessions.
