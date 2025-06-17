@@ -68,6 +68,8 @@ TimekeepPh is a Rails 8.0 application using:
 - `Procfile.dev` - Development processes (web server + CSS watcher)
 - `.rubocop.yml` - Code style configuration (inherits from rails-omakase)
 - `db/seeds.rb` - Demo data for 3 companies with users, branches, and employees
+- `app/controllers/clock_in_controller.rb` - Selfie clock-in with camera/GPS functionality
+- `app/javascript/controllers/clock_in_controller.js` - Stimulus controller for camera/GPS capture
 
 ### Asset Pipeline
 - Uses Propshaft for asset pipeline
@@ -134,12 +136,15 @@ This project follows principles from "Sustainable Rails" by David Bryant Copelan
 - [x] Employee model (workers)
 - [x] Employee authentication system (PIN-based with tenant isolation)
 
-### Clock-in System (User Story U1)
+### Clock-in System (User Story U1) 
 - [x] ClockEntry model
-- [ ] Clock-in controller with camera/GPS
+- [x] Clock-in controller with camera/GPS
+- [x] Selfie capture with branch locking
+- [x] Clock-in views with mobile-optimized interface
+- [x] GPS location capture and validation
+- [x] AJAX form submission with proper error handling
 - [ ] Offline storage (IndexedDB)
 - [ ] Auto-sync functionality
-- [ ] Selfie capture with branch locking
 
 ### Service Objects
 - [ ] `ClockInService` - Handles camera, GPS, validation
