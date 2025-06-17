@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_17_104735) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_17_105514) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -32,6 +32,22 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_17_104735) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_branches_on_account_id"
+  end
+
+  create_table "clock_entries", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "employee_id", null: false
+    t.uuid "branch_id", null: false
+    t.decimal "gps_latitude", precision: 10, scale: 6, null: false
+    t.decimal "gps_longitude", precision: 10, scale: 6, null: false
+    t.string "selfie_url"
+    t.integer "entry_type", null: false
+    t.boolean "synced", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["branch_id"], name: "index_clock_entries_on_branch_id"
+    t.index ["created_at"], name: "index_clock_entries_on_created_at"
+    t.index ["employee_id"], name: "index_clock_entries_on_employee_id"
+    t.index ["synced"], name: "index_clock_entries_on_synced"
   end
 
   create_table "employees", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -66,6 +82,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_17_104735) do
   end
 
   add_foreign_key "branches", "accounts"
+  add_foreign_key "clock_entries", "branches"
+  add_foreign_key "clock_entries", "employees"
   add_foreign_key "employees", "accounts"
   add_foreign_key "employees", "branches"
   add_foreign_key "users", "accounts"

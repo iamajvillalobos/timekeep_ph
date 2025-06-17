@@ -1,0 +1,41 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+acme_john_clock_in:
+  employee: acme_john
+  branch: acme_downtown
+  gps_latitude: 14.5995
+  gps_longitude: 120.9842
+  selfie_url: "https://example.com/selfie1.jpg"
+  entry_type: 0  # clock_in
+  synced: true
+  created_at: <%= 1.hour.ago %>
+
+acme_john_clock_out:
+  employee: acme_john
+  branch: acme_downtown
+  gps_latitude: 14.5995
+  gps_longitude: 120.9842
+  selfie_url: "https://example.com/selfie2.jpg"
+  entry_type: 1  # clock_out
+  synced: false
+  created_at: <%= 30.minutes.ago %>
+
+acme_jane_clock_in:
+  employee: acme_jane
+  branch: acme_downtown
+  gps_latitude: 14.6042
+  gps_longitude: 121.0221
+  selfie_url: "https://example.com/selfie3.jpg"
+  entry_type: 0  # clock_in
+  synced: false
+  created_at: <%= 2.hours.ago %>
+
+tech_bob_clock_in:
+  employee: tech_bob
+  branch: tech_main
+  gps_latitude: 14.5547
+  gps_longitude: 121.0244
+  selfie_url: "https://example.com/selfie4.jpg"
+  entry_type: 0  # clock_in
+  synced: true
+  created_at: <%= 1.day.ago %>
