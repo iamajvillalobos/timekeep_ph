@@ -31,10 +31,13 @@ Account (Company/Organization) - UUID primary key
 - [x] Configure Rails to use UUIDs as primary keys
 - [x] Account model (with subdomain for tenant identification)
 - [x] Account model comprehensive TDD tests
-- [🔄] User model (with authentication, scoped by account_id) - TDD tests written, model in progress
-- [ ] Branch model (scoped by account_id)
-- [ ] Employee model (scoped by account_id)
-- [ ] ClockEntry model (scoped through employee)
+- [x] User model (with Devise authentication, scoped by account_id)
+- [x] User model comprehensive TDD tests
+- [x] Branch model (scoped by account_id)
+- [x] Branch model comprehensive TDD tests
+- [x] Employee model (scoped by account_id)
+- [x] Employee model comprehensive TDD tests
+- [🔄] ClockEntry model (scoped through employee) - IN PROGRESS
 
 ### Phase 2: Authentication & Authorization
 - [ ] User authentication system
@@ -93,67 +96,79 @@ class Account < ApplicationRecord
 end
 ```
 
-### User 🔄 IN PROGRESS
+### User ✅ IMPLEMENTED
 ```ruby
 # Backend access (HR, Admins, Managers) - UUID primary key
 class User < ApplicationRecord
   belongs_to :account
-  
+
   normalizes :email, with: ->(email) { email.strip.downcase }
   normalizes :name, with: ->(name) { name.strip }
-  
+
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable
-  
-  enum role: { admin: 0, hr: 1, manager: 2 }
-  
+         :recoverable, :rememberable
+
+  enum :role, { admin: 0, hr: 1, manager: 2 }
+
   validates :name, presence: true
-  validates :email, presence: true, uniqueness: { scope: :account_id }
   validates :role, presence: true
-  
+  validates :email, presence: true,
+                   format: { with: Devise.email_regexp },
+                   uniqueness: { scope: :account_id, case_sensitive: false }
+  validates :password, presence: true, length: { minimum: 6 }, if: :password_required?
+
   scope :for_account, ->(account) { where(account: account) }
+
+  private
+
+  def password_required?
+    !persisted? || !password.nil? || !password_confirmation.nil?
+  end
 end
 ```
 
-### Branch ⏳ PENDING
+### Branch ✅ IMPLEMENTED
 ```ruby
 # Physical locations where employees work - UUID primary key
 class Branch < ApplicationRecord
   belongs_to :account
   has_many :employees, dependent: :destroy
   has_many :clock_entries, dependent: :destroy
-  
+
+  normalizes :name, with: ->(name) { name.strip }
+  normalizes :address, with: ->(address) { address.strip }
+
   validates :name, presence: true
   validates :address, presence: true
-  
+
   scope :active, -> { where(active: true) }
   scope :for_account, ->(account) { where(account: account) }
 end
 ```
 
-### Employee ⏳ PENDING
+### Employee ✅ IMPLEMENTED
 ```ruby
 # Workers who clock in/out - UUID primary key
 class Employee < ApplicationRecord
   belongs_to :account
   belongs_to :branch
   has_many :clock_entries, dependent: :destroy
-  
+
   normalizes :name, with: ->(name) { name.strip }
   normalizes :email, with: ->(email) { email&.strip&.downcase }
   normalizes :employee_id, with: ->(id) { id.strip.upcase }
-  
+
   validates :name, presence: true
   validates :employee_id, presence: true, uniqueness: { scope: :account_id }
   validates :pin, presence: true, length: { minimum: 4 }
-  
+
   scope :active, -> { where(active: true) }
   scope :for_account, ->(account) { where(account: account) }
-  
+
   validate :branch_belongs_to_account
-  
+
   private
-  
+
   def branch_belongs_to_account
     return unless branch && account
     errors.add(:branch, "must belong to the same account") if branch.account != account
@@ -161,7 +176,7 @@ class Employee < ApplicationRecord
 end
 ```
 
-### ClockEntry ⏳ PENDING
+### ClockEntry 🔄 IN PROGRESS
 ```ruby
 # Time records with photos and GPS - UUID primary key
 class ClockEntry < ApplicationRecord
