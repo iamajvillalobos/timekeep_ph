@@ -2,7 +2,7 @@ class ClockEntry < ApplicationRecord
   belongs_to :employee
   belongs_to :branch
 
-  enum :entry_type, { clock_in: 0, clock_out: 1 }
+  enum :entry_type, { clock_in: 0, clock_out: 1, break_start: 2, break_end: 3 }
 
   validates :gps_latitude, presence: true, numericality: { in: -90..90 }
   validates :gps_longitude, presence: true, numericality: { in: -180..180 }

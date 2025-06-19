@@ -50,14 +50,24 @@ Account (Company/Organization) - UUID primary key
 - [x] Clock-in view with camera interface
 - [x] Branch selector component
 
-### Phase 4: Offline Functionality
+### Phase 4: Deployment & Infrastructure
+- [x] Heroku deployment with Kamal configuration
+- [x] PostgreSQL database setup
+- [ ] **BLOCKED**: Wildcard subdomain SSL setup (Cloudflare + Heroku)
+  - Issue: 525 SSL handshake errors on both timekeep.ph and subdomains
+  - Need: Configure Cloudflare SSL mode (trying Flexible vs Full)
+  - Heroku ACM doesn't support wildcard certs
+- [ ] Production environment verification
+
+### Phase 5: Offline Functionality  
 - [ ] IndexedDB storage via Stimulus
 - [ ] Auto-sync mechanism
 - [ ] Connection status detection
 
-### Phase 5: Routes & Testing
-- [ ] Clock-in routes
-- [ ] Tests for all functionality
+### Phase 6: Routes & Testing
+- [x] Clock-in routes implemented
+- [x] Controller tests for clock-in functionality
+- [ ] System tests for full workflow
 
 ## Development Approach (Following Sustainable Rails)
 

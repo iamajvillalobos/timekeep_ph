@@ -3,12 +3,23 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [ 
     "video", "canvas", "placeholder", "startButton", "captureButton", "retakeButton", 
-    "gpsStatus", "latInput", "lngInput", "selfieInput", "submitButton", 
-    "branchSelect", "form" 
+    "latInput", "lngInput", "selfieInput", "form", "smartButton", "cameraModal",
+    "confirmButton", "branchInput", "entryTypeInput", "liveTimer", "todaysHours",
+    "clockOutButton"
   ]
+  
+  static values = {
+    employeeState: String,
+    action: String,
+    requiresSelfie: Boolean
+  }
 
   connect() {
-    console.log("Clock-in controller connected")
+    console.log("Smart Clock-in controller connected")
+    console.log("Employee state:", this.employeeStateValue)
+    console.log("Action:", this.actionValue)
+    console.log("Requires selfie:", this.requiresSelfieValue)
+    
     this.stream = null
     this.hasLocation = false
     this.hasSelfie = false
@@ -19,6 +30,9 @@ export default class extends Controller {
     // Add form submission handler
     this.formTarget.addEventListener('ajax:success', this.handleSuccess.bind(this))
     this.formTarget.addEventListener('ajax:error', this.handleError.bind(this))
+    
+    // Start live timer if clocked in
+    this.startLiveTimer()
   }
 
   disconnect() {
@@ -77,6 +91,11 @@ export default class extends Controller {
     this.captureButtonTarget.classList.add("hidden")
     this.retakeButtonTarget.classList.remove("hidden")
     
+    // Show confirm button
+    if (this.hasConfirmButtonTarget) {
+      this.confirmButtonTarget.classList.remove("hidden")
+    }
+    
     // Stop camera stream
     if (this.stream) {
       this.stream.getTracks().forEach(track => track.stop())
@@ -85,10 +104,6 @@ export default class extends Controller {
     
     this.hasSelfie = true
     this.updateSubmitButton()
-    
-    // Lock branch selector after selfie is taken (but keep it enabled for form submission)
-    this.branchSelectTarget.classList.add("bg-gray-100", "cursor-not-allowed")
-    this.branchSelectTarget.style.pointerEvents = "none"
   }
 
   retakeSelfie() {
@@ -104,15 +119,16 @@ export default class extends Controller {
     this.retakeButtonTarget.classList.add("hidden")
     this.startButtonTarget.classList.remove("hidden")
     
-    // Unlock branch selector
-    this.branchSelectTarget.classList.remove("bg-gray-100", "cursor-not-allowed")
-    this.branchSelectTarget.style.pointerEvents = "auto"
+    // Hide confirm button if it exists
+    if (this.hasConfirmButtonTarget) {
+      this.confirmButtonTarget.classList.add("hidden")
+    }
     
     this.updateSubmitButton()
   }
 
   getLocation() {
-    this.gpsStatusTarget.textContent = "Getting location..."
+    console.log("Getting location...")
     
     if (!navigator.geolocation) {
       this.showLocationError("Geolocation not supported")
@@ -125,9 +141,7 @@ export default class extends Controller {
         this.lngInputTarget.value = position.coords.longitude
         this.hasLocation = true
         
-        this.gpsStatusTarget.textContent = `Located (${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)})`
-        this.gpsStatusTarget.parentElement.classList.remove("bg-blue-50", "border-blue-200")
-        this.gpsStatusTarget.parentElement.classList.add("bg-green-50", "border-green-200")
+        console.log(`Location acquired: ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`)
         
         this.updateSubmitButton()
       },
@@ -144,9 +158,8 @@ export default class extends Controller {
   }
 
   showLocationError(message) {
-    this.gpsStatusTarget.textContent = message
-    this.gpsStatusTarget.parentElement.classList.remove("bg-blue-50", "border-blue-200")
-    this.gpsStatusTarget.parentElement.classList.add("bg-red-50", "border-red-200")
+    console.error("Location error:", message)
+    this.showErrorMessage(message)
   }
 
   showError(message) {
@@ -168,13 +181,9 @@ export default class extends Controller {
   }
 
   updateSubmitButton() {
-    const branchSelected = this.branchSelectTarget.value !== "" && this.branchSelectTarget.value !== null
-    const allReady = this.hasLocation && this.hasSelfie && branchSelected
-    
-    // Debug logging
+    // In the smart dashboard, branch is pre-selected and we don't need the old submit button validation
+    // This method is now mainly for legacy compatibility
     console.log("Form validation status:", {
-      branchSelected: branchSelected,
-      branchValue: this.branchSelectTarget.value,
       hasLocation: this.hasLocation,
       hasSelfie: this.hasSelfie,
       latValue: this.latInputTarget.value,
@@ -182,25 +191,6 @@ export default class extends Controller {
       selfieValue: this.selfieInputTarget.value ? "Present" : "Missing",
       selfieLength: this.selfieInputTarget.value.length
     })
-    
-    if (allReady) {
-      this.submitButtonTarget.disabled = false
-      this.submitButtonTarget.classList.remove("bg-gray-400")
-      this.submitButtonTarget.classList.add("bg-blue-600", "hover:bg-blue-700")
-      this.submitButtonTarget.textContent = "Complete Clock Entry"
-    } else {
-      this.submitButtonTarget.disabled = true
-      this.submitButtonTarget.classList.add("bg-gray-400")
-      this.submitButtonTarget.classList.remove("bg-blue-600", "hover:bg-blue-700")
-      
-      if (!branchSelected) {
-        this.submitButtonTarget.textContent = "Select branch first"
-      } else if (!this.hasLocation) {
-        this.submitButtonTarget.textContent = "Getting location..."
-      } else if (!this.hasSelfie) {
-        this.submitButtonTarget.textContent = "Take selfie first"
-      }
-    }
   }
 
   handleSuccess(event) {
@@ -275,11 +265,149 @@ export default class extends Controller {
     this.retakeButtonTarget.classList.add("hidden")
     this.startButtonTarget.classList.remove("hidden")
     
-    // Unlock branch selector
-    this.branchSelectTarget.classList.remove("bg-gray-100", "cursor-not-allowed")
-    this.branchSelectTarget.style.pointerEvents = "auto"
-    
     this.updateSubmitButton()
   }
+
+  // Smart Clock-In Methods
+  smartClockAction() {
+    console.log("Smart clock action triggered:", this.actionValue)
+    console.log("Requires selfie:", this.requiresSelfieValue)
+    
+    if (!this.hasLocation) {
+      this.showErrorMessage("Getting your location... Please wait.")
+      return
+    }
+
+    // Set entry type based on employee state
+    this.entryTypeInputTarget.value = this.actionValue
+    
+    // Branch is already pre-selected in the form
+    if (!this.branchInputTarget.value) {
+      this.showErrorMessage("No branch available. Please contact your administrator.")
+      return
+    }
+
+    // Check if selfie is required for this action
+    if (this.requiresSelfieValue) {
+      // Show camera modal for selfie
+      this.showCameraModal()
+    } else {
+      // No selfie required, submit directly
+      this.submitDirectly()
+    }
+  }
+
+  // Clock Out Action (secondary button when clocked in)
+  clockOutAction() {
+    console.log("Clock out action triggered")
+    
+    if (!this.hasLocation) {
+      this.showErrorMessage("Getting your location... Please wait.")
+      return
+    }
+
+    // Set entry type to clock_out
+    this.entryTypeInputTarget.value = "clock_out"
+    
+    // Branch is already pre-selected in the form
+    if (!this.branchInputTarget.value) {
+      this.showErrorMessage("No branch available. Please contact your administrator.")
+      return
+    }
+
+    // Clock out never requires selfie, submit directly
+    this.submitDirectly()
+  }
+
+  submitDirectly() {
+    // Clear any existing selfie data since it's not required
+    this.selfieInputTarget.value = ""
+    
+    // Submit the form directly
+    console.log("Submitting without selfie...")
+    if (this.formTarget.requestSubmit) {
+      this.formTarget.requestSubmit()
+    } else {
+      this.formTarget.submit()
+    }
+  }
+
+  showCameraModal() {
+    this.cameraModalTarget.classList.remove("hidden")
+    document.body.style.overflow = "hidden"
+  }
+
+  closeCameraModal() {
+    this.cameraModalTarget.classList.add("hidden")
+    document.body.style.overflow = "auto"
+    
+    // Reset camera state
+    if (this.stream) {
+      this.stream.getTracks().forEach(track => track.stop())
+      this.stream = null
+    }
+    
+    this.hasSelfie = false
+    this.canvasTarget.classList.add("hidden")
+    this.placeholderTarget.classList.remove("hidden")
+    this.retakeButtonTarget.classList.add("hidden")
+    this.confirmButtonTarget.classList.add("hidden")
+    this.startButtonTarget.classList.remove("hidden")
+  }
+
+  confirmSelfie() {
+    if (!this.hasSelfie) {
+      this.showErrorMessage("Please take a selfie first.")
+      return
+    }
+
+    // Close modal
+    this.closeCameraModal()
+    
+    // Log form data before submission
+    console.log("Form data:", {
+      branch_id: this.branchInputTarget.value,
+      entry_type: this.entryTypeInputTarget.value,
+      gps_latitude: this.latInputTarget.value,
+      gps_longitude: this.lngInputTarget.value,
+      selfie_data: this.selfieInputTarget.value ? "Present" : "Empty"
+    })
+
+    // Submit the form using requestSubmit for better Rails UJS compatibility
+    console.log("Submitting form with selfie...")
+    if (this.formTarget.requestSubmit) {
+      this.formTarget.requestSubmit()
+    } else {
+      // Fallback for older browsers
+      this.formTarget.submit()
+    }
+  }
+
+  startLiveTimer() {
+    if (!this.hasLiveTimerTarget) return
+    
+    const startTime = parseInt(this.liveTimerTarget.dataset.startTime)
+    if (!startTime) return
+
+    this.timerInterval = setInterval(() => {
+      const currentTime = Math.floor(Date.now() / 1000)
+      const elapsed = currentTime - startTime
+      const hours = Math.floor(elapsed / 3600)
+      const minutes = Math.floor((elapsed % 3600) / 60)
+      
+      const timeText = hours > 0 
+        ? `Working for ${hours}h ${minutes}m`
+        : `Working for ${minutes}m`
+      
+      this.liveTimerTarget.textContent = timeText
+      
+      // Update today's hours in real-time
+      if (this.hasTodaysHoursTarget) {
+        const currentHours = (elapsed / 3600).toFixed(2)
+        this.todaysHoursTarget.innerHTML = `${currentHours} <span class="text-sm font-normal text-gray-500">hrs</span>`
+      }
+    }, 60000) // Update every minute
+  }
+
 
 }
