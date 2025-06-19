@@ -4,8 +4,8 @@
     <div class="max-w-md mx-auto px-4 py-4">
       <div class="flex justify-between items-center">
         <h1 class="text-xl font-semibold text-gray-900">Clock In/Out</h1>
-        <%= link_to "Logout", employee_logout_path, method: :delete, 
-                    class: "text-sm text-red-600 hover:text-red-800" %>
+        <%= button_to "Logout", employee_logout_path, method: :delete,
+                      class: "text-sm text-red-600 hover:text-red-800 bg-transparent border-0 p-0" %>
       </div>
       <p class="text-sm text-gray-600 mt-1">Welcome, <%= current_employee.name %></p>
     </div>
@@ -19,7 +19,7 @@
       </div>
     </div>
   <% end %>
-  
+
   <% if flash[:success] %>
     <div class="max-w-md mx-auto px-4 pt-4">
       <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
@@ -30,15 +30,15 @@
 
   <!-- Main Content -->
   <div class="max-w-md mx-auto px-4 py-6">
-    <%= form_with url: create_clock_entry_path, local: false, 
-                  data: { "clock-in-target": "form" }, 
+    <%= form_with url: create_clock_entry_path, local: false,
+                  data: { "clock-in-target": "form" },
                   class: "space-y-6" do |form| %>
-      
+
       <!-- Branch Selection -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Select Branch</label>
-        <%= form.select :branch_id, 
-                        options_from_collection_for_select(@branches, :id, :name), 
+        <%= form.select :branch_id,
+                        options_from_collection_for_select(@branches, :id, :name),
                         { prompt: "Choose your branch..." },
                         { class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500",
                           data: { "clock-in-target": "branchSelect", "action": "change->clock-in#updateSubmitButton" } } %>
@@ -49,7 +49,7 @@
         <label class="block text-sm font-medium text-gray-700 mb-2">Action</label>
         <div class="grid grid-cols-2 gap-3">
           <label class="relative">
-            <%= form.radio_button :entry_type, "clock_in", 
+            <%= form.radio_button :entry_type, "clock_in",
                                   checked: true,
                                   class: "sr-only peer",
                                   data: { "clock-in-target": "entryType" } %>
@@ -58,9 +58,9 @@
               <div class="text-sm opacity-75">Start work</div>
             </div>
           </label>
-          
+
           <label class="relative">
-            <%= form.radio_button :entry_type, "clock_out", 
+            <%= form.radio_button :entry_type, "clock_out",
                                   class: "sr-only peer",
                                   data: { "clock-in-target": "entryType" } %>
             <div class="peer-checked:bg-red-600 peer-checked:text-white bg-white border-2 border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50 peer-checked:border-red-600">
@@ -74,23 +74,23 @@
       <!-- Camera Section -->
       <div class="space-y-4">
         <label class="block text-sm font-medium text-gray-700">Take Selfie</label>
-        
+
         <!-- Camera Preview -->
         <div class="relative bg-gray-100 rounded-lg overflow-hidden" style="aspect-ratio: 4/3;">
-          <video data-clock-in-target="video" 
+          <video data-clock-in-target="video"
                  class="w-full h-full object-cover hidden"
                  autoplay muted playsinline></video>
-          
-          <canvas data-clock-in-target="canvas" 
+
+          <canvas data-clock-in-target="canvas"
                   class="w-full h-full object-cover hidden"></canvas>
-          
-          <div data-clock-in-target="placeholder" 
+
+          <div data-clock-in-target="placeholder"
                class="w-full h-full flex items-center justify-center text-gray-500">
             <div class="text-center">
               <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <p class="mt-2 text-sm">Camera preview will appear here</p>
@@ -100,21 +100,21 @@
 
         <!-- Camera Controls -->
         <div class="flex space-x-3">
-          <button type="button" 
+          <button type="button"
                   data-action="click->clock-in#startCamera"
                   data-clock-in-target="startButton"
                   class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
             Start Camera
           </button>
-          
-          <button type="button" 
+
+          <button type="button"
                   data-action="click->clock-in#takeSelfie"
                   data-clock-in-target="captureButton"
                   class="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 hidden">
             Take Selfie
           </button>
-          
-          <button type="button" 
+
+          <button type="button"
                   data-action="click->clock-in#retakeSelfie"
                   data-clock-in-target="retakeButton"
                   class="flex-1 bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 hidden">
@@ -127,9 +127,9 @@
       <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
         <div class="flex items-center">
           <svg class="h-5 w-5 text-blue-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
           <span class="text-sm font-medium text-blue-900">Location Status:</span>
@@ -143,7 +143,7 @@
       <%= form.hidden_field :selfie_data, data: { "clock-in-target": "selfieInput" } %>
 
       <!-- Submit Button -->
-      <button type="submit" 
+      <button type="submit"
               data-clock-in-target="submitButton"
               disabled
               class="w-full bg-gray-400 text-white py-3 px-4 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed">
