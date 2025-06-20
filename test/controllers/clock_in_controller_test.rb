@@ -1,4 +1,5 @@
 require "test_helper"
+require "minitest/mock"
 
 class ClockInControllerTest < ActionDispatch::IntegrationTest
   test "should redirect to employee login when not authenticated" do
@@ -29,21 +30,31 @@ class ClockInControllerTest < ActionDispatch::IntegrationTest
     employee = employees(:acme_john)
     branch = branches(:acme_downtown)
 
-    # Authenticate employee
+    # Authenticate employee with PIN only
     post employee_authenticate_path, params: {
-      employee_id: employee.employee_id,
       pin: employee.pin
     }
 
-    assert_difference "ClockEntry.count", 1 do
-      post create_clock_entry_path, params: {
-        branch_id: branch.id,
-        entry_type: "clock_in",
-        gps_latitude: "14.5995",
-        gps_longitude: "120.9842",
-        selfie_data: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
-      }
+    # Create a test double for face verification
+    mock_service = Minitest::Mock.new
+    mock_service.expect :verify_employee_face, {
+      success: true,
+      confidence: 95.0
+    }, [String, String]
+    
+    FaceVerificationService.stub :new, mock_service do
+      assert_difference "ClockEntry.count", 1 do
+        post create_clock_entry_path, params: {
+          branch_id: branch.id,
+          entry_type: "clock_in",
+          gps_latitude: "14.5995",
+          gps_longitude: "120.9842",
+          selfie_data: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+        }
+      end
     end
+    
+    mock_service.verify
 
     assert_redirected_to clock_in_path
     assert_includes flash[:success], "Successfully clocked clock in"
@@ -289,21 +300,30 @@ class ClockInControllerTest < ActionDispatch::IntegrationTest
       synced: true
     )
 
-    # Authenticate employee
+    # Authenticate employee with PIN only
     post employee_authenticate_path, params: {
-      employee_id: employee.employee_id,
       pin: employee.pin
     }
 
+    # Mock face verification for break_end (which requires selfie)
+    mock_service = Minitest::Mock.new
+    mock_service.expect :verify_employee_face, {
+      success: true,
+      confidence: 95.0
+    }, [String, String]
+    
     initial_count = ClockEntry.count
-    post create_clock_entry_path, params: {
-      branch_id: branch.id,
-      entry_type: "break_end",
-      gps_latitude: "14.5995",
-      gps_longitude: "120.9842",
-      selfie_data: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/test"
-    }
-
+    FaceVerificationService.stub :new, mock_service do
+      post create_clock_entry_path, params: {
+        branch_id: branch.id,
+        entry_type: "break_end",
+        gps_latitude: "14.5995",
+        gps_longitude: "120.9842",
+        selfie_data: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/test"
+      }
+    end
+    
+    mock_service.verify
     assert_equal initial_count + 1, ClockEntry.count
     assert_redirected_to clock_in_path
     assert_includes flash[:success], "Successfully clocked break end"

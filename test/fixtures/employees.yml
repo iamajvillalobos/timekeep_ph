@@ -6,6 +6,7 @@ acme_john:
   account: acme_corp
   branch: acme_downtown
   active: true
+  face_template_id: "test-face-template-john-123"
 
 acme_jane:
   name: "Jane Wilson"
@@ -15,6 +16,7 @@ acme_jane:
   account: acme_corp
   branch: acme_uptown
   active: true
+  face_template_id: "test-face-template-jane-456"
 
 acme_inactive:
   name: "Bob Inactive"

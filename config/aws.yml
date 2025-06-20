@@ -1,0 +1,26 @@
+development:
+  region: us-east-1
+  access_key_id: <%= ENV["AWS_ACCESS_KEY_ID"] %>
+  secret_access_key: <%= ENV["AWS_SECRET_ACCESS_KEY"] %>
+  rekognition:
+    collection_id: timekeep-dev-faces
+  s3:
+    bucket_name: timekeep-dev-selfies
+
+test:
+  region: us-east-1
+  access_key_id: <%= ENV["AWS_ACCESS_KEY_ID"] %>
+  secret_access_key: <%= ENV["AWS_SECRET_ACCESS_KEY"] %>
+  rekognition:
+    collection_id: timekeep-test-faces
+  s3:
+    bucket_name: timekeep-test-selfies
+
+production:
+  region: us-east-1
+  access_key_id: <%= ENV["AWS_ACCESS_KEY_ID"] %>
+  secret_access_key: <%= ENV["AWS_SECRET_ACCESS_KEY"] %>
+  rekognition:
+    collection_id: timekeep-prod-faces
+  s3:
+    bucket_name: timekeep-prod-selfies

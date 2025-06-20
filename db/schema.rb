@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_17_105514) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_19_163924) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -44,10 +44,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_17_105514) do
     t.boolean "synced", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "verification_status", default: "pending"
+    t.decimal "face_confidence", precision: 5, scale: 2
     t.index ["branch_id"], name: "index_clock_entries_on_branch_id"
     t.index ["created_at"], name: "index_clock_entries_on_created_at"
     t.index ["employee_id"], name: "index_clock_entries_on_employee_id"
     t.index ["synced"], name: "index_clock_entries_on_synced"
+    t.index ["verification_status"], name: "index_clock_entries_on_verification_status"
   end
 
   create_table "employees", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -60,6 +63,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_17_105514) do
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "face_template_id"
     t.index ["account_id"], name: "index_employees_on_account_id"
     t.index ["branch_id"], name: "index_employees_on_branch_id"
     t.index ["employee_id", "account_id"], name: "index_employees_on_employee_id_and_account_id", unique: true

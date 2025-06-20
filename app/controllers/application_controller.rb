@@ -19,4 +19,9 @@ class ApplicationController < ActionController::Base
       redirect_to new_user_session_path, alert: "Access denied for this account"
     end
   end
+
+  def current_account
+    Current.account || current_user&.account
+  end
+  helper_method :current_account
 end

@@ -13,6 +13,15 @@ Rails.application.routes.draw do
   get "clock-in", to: "clock_in#show", as: "clock_in"
   post "clock-in", to: "clock_in#create", as: "create_clock_entry"
 
+  # Admin routes
+  namespace :admin do
+    resources :face_enrollment, only: [ :index, :show, :destroy ] do
+      member do
+        post :enroll
+      end
+    end
+  end
+
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check

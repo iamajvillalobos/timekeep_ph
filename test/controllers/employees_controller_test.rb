@@ -11,7 +11,6 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
     employee = employees(:acme_john)
 
     post employee_authenticate_path, params: {
-      employee_id: employee.employee_id,
       pin: employee.pin
     }
 
@@ -22,23 +21,21 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
 
   test "should reject invalid employee credentials" do
     post employee_authenticate_path, params: {
-      employee_id: "INVALID",
       pin: "0000"
     }
 
     assert_redirected_to employee_login_path
     assert_nil session[:employee_id]
-    assert_equal "Invalid Employee ID or PIN", flash[:error]
+    assert_equal "Invalid PIN", flash[:error]
   end
 
-  test "should require employee_id and pin" do
+  test "should require pin" do
     post employee_authenticate_path, params: {
-      employee_id: "",
       pin: ""
     }
 
     assert_redirected_to employee_login_path
-    assert_equal "Employee ID and PIN are required", flash[:error]
+    assert_equal "PIN is required", flash[:error]
   end
 
   test "should logout employee" do

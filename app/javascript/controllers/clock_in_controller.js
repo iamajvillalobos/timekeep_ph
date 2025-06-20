@@ -67,6 +67,7 @@ export default class extends Controller {
     }
   }
 
+
   takeSelfie() {
     const video = this.videoTarget
     const canvas = this.canvasTarget
@@ -197,10 +198,24 @@ export default class extends Controller {
     const response = event.detail[0]
     console.log("Clock-in success:", response)
     
+    // Hide loading state
+    this.hideVerificationLoading()
+    
     if (response.success) {
-      this.showSuccessMessage(response.message)
-      // Reset form state
-      this.resetForm()
+      // Show enhanced success message with verification details
+      let message = response.message
+      if (response.verification_status === 'verified' && response.confidence) {
+        message += ` (Face verified: ${Math.round(response.confidence)}% confidence)`
+      } else if (response.verification_status === 'bypassed') {
+        message += ` (No face verification required)`
+      }
+      
+      this.showSuccessMessage(message)
+      
+      // Wait 2 seconds then refresh to show updated state
+      setTimeout(() => {
+        window.location.reload()
+      }, 2000)
     } else {
       this.showErrorMessage(response.message)
     }
@@ -209,6 +224,9 @@ export default class extends Controller {
   handleError(event) {
     console.log("Clock-in error:", event.detail)
     const response = event.detail[0]
+    
+    // Hide loading state
+    this.hideVerificationLoading()
     
     if (response && response.message) {
       this.showErrorMessage(response.message)
@@ -364,6 +382,9 @@ export default class extends Controller {
     // Close modal
     this.closeCameraModal()
     
+    // Show verification loading state
+    this.showVerificationLoading()
+    
     // Log form data before submission
     console.log("Form data:", {
       branch_id: this.branchInputTarget.value,
@@ -380,6 +401,39 @@ export default class extends Controller {
     } else {
       // Fallback for older browsers
       this.formTarget.submit()
+    }
+  }
+
+
+  showVerificationLoading() {
+    // Remove any existing messages
+    const existingFlash = document.querySelector('.flash-message')
+    if (existingFlash) {
+      existingFlash.remove()
+    }
+
+    // Create verification loading message
+    const loadingContainer = document.createElement('div')
+    loadingContainer.className = "max-w-md mx-auto px-4 pt-4 flash-message verification-loading"
+    
+    loadingContainer.innerHTML = `
+      <div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-md">
+        <div class="flex items-center">
+          <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-3"></div>
+          <span>Verifying your face... Please wait.</span>
+        </div>
+      </div>
+    `
+    
+    // Insert after header
+    const header = document.querySelector('.bg-white.shadow-lg')
+    header.insertAdjacentElement('afterend', loadingContainer)
+  }
+
+  hideVerificationLoading() {
+    const loadingElement = document.querySelector('.verification-loading')
+    if (loadingElement) {
+      loadingElement.remove()
     }
   }
 

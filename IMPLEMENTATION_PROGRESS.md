@@ -50,7 +50,30 @@ Account (Company/Organization) - UUID primary key
 - [x] Clock-in view with camera interface
 - [x] Branch selector component
 
-### Phase 4: Deployment & Infrastructure
+### Phase 3.5: Smart Clock-In System (Phase 1 Complete) ✅ COMPLETED
+- [x] Smart dashboard with personalized greeting
+- [x] Single prominent Clock In/Out button that adapts to employee state
+- [x] Working hours summary (today + pay period)
+- [x] Auto-detect employee clock state from last entry
+- [x] Context-aware UI showing appropriate actions
+- [x] Break functionality with dual-button interface
+- [x] 4-state detection (clocked_out, clocked_in, on_break, returning)
+- [x] Break-aware hours calculation (excludes break time)
+- [x] Conditional selfie requirements (clock_in and break_end only)
+- [x] Comprehensive tests for all break scenarios
+
+### Phase 4: MediaPipe Face Detection Integration 🚧 IN PROGRESS
+- [ ] Install and configure MediaPipe Face Detection (`@mediapipe/face_detection`)
+- [ ] Create face detection service for MediaPipe integration
+- [ ] Create face detection controller for UI management
+- [ ] Implement circular face positioning guide with animated progress ring
+- [ ] Add real-time face positioning feedback
+- [ ] Replace manual camera controls with auto-capture
+- [ ] Add face detection validation before proceeding
+- [ ] Update camera modal UI with circular detection area
+- [ ] Add comprehensive tests for face detection workflow
+
+### Phase 5: Deployment & Infrastructure
 - [x] Heroku deployment with Kamal configuration
 - [x] PostgreSQL database setup
 - [ ] **BLOCKED**: Wildcard subdomain SSL setup (Cloudflare + Heroku)

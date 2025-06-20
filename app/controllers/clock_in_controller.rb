@@ -71,7 +71,45 @@ class ClockInController < ApplicationController
       return
     end
 
-    # Create clock entry
+    # Perform face verification BEFORE creating clock entry if selfie is required
+    verification_result = nil
+    if selfie_required && selfie_data.present?
+      # Check if employee has face enrollment
+      unless @employee.face_template_id.present?
+        error_message = "Face enrollment required. Please contact HR to enroll your face."
+        respond_to do |format|
+          format.html {
+            flash[:error] = error_message
+            redirect_to clock_in_path
+          }
+          format.json {
+            render json: { success: false, message: error_message }, status: :unprocessable_entity
+          }
+        end
+        return
+      end
+
+      # Perform face verification immediately
+      image_data = decode_selfie_data(selfie_data)
+      verification_service = FaceVerificationService.new
+      verification_result = verification_service.verify_employee_face(image_data, @employee.id.to_s)
+
+      unless verification_result[:success]
+        error_message = "Face verification failed. Please ensure good lighting and try again."
+        respond_to do |format|
+          format.html {
+            flash[:error] = error_message
+            redirect_to clock_in_path
+          }
+          format.json {
+            render json: { success: false, message: error_message }, status: :unprocessable_entity
+          }
+        end
+        return
+      end
+    end
+
+    # Create clock entry (only if verification passed or not required)
     @clock_entry = ClockEntry.new(
       employee: @employee,
       branch: branch,
@@ -79,10 +117,13 @@ class ClockInController < ApplicationController
       gps_latitude: gps_latitude.to_f,
       gps_longitude: gps_longitude.to_f,
       selfie_url: selfie_required ? store_selfie(selfie_data) : nil,
-      synced: true # Since we're online and saving directly
+      synced: true,
+      verification_status: selfie_required ? :verified : :bypassed,
+      face_confidence: verification_result&.dig(:confidence)
     )
 
     if @clock_entry.save
+
       respond_to do |format|
         format.html {
           flash[:success] = "Successfully clocked #{entry_type.tr('_', ' ')}! Welcome, #{@employee.name}."
@@ -91,7 +132,9 @@ class ClockInController < ApplicationController
         format.json {
           render json: {
             success: true,
-            message: "Successfully clocked #{entry_type.tr('_', ' ')}! Welcome, #{@employee.name}."
+            message: "Successfully clocked #{entry_type.tr('_', ' ')}! Welcome, #{@employee.name}.",
+            verification_status: @clock_entry.verification_status,
+            confidence: @clock_entry.face_confidence
           }
         }
       end
@@ -318,5 +361,11 @@ class ClockInController < ApplicationController
   def selfie_required?(action_or_entry_type)
     # Selfie is required for clock_in and break_end (starting work or returning from break)
     %w[clock_in break_end].include?(action_or_entry_type.to_s)
+  end
+
+  def decode_selfie_data(selfie_data)
+    # Remove data:image/jpeg;base64, prefix if present
+    base64_data = selfie_data.sub(/^data:image\/[a-z]+;base64,/, "")
+    Base64.decode64(base64_data)
   end
 end
