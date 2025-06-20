@@ -20,17 +20,215 @@
 
   <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
     <div class="px-4 py-6 sm:px-0">
-      <div class="border-4 border-dashed border-gray-200 rounded-lg p-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Dashboard</h2>
-        <p class="text-gray-600">Welcome to your TimekeepPh dashboard. This is where you'll manage your organization's time tracking.</p>
+      <% if @setup_status[:setup_complete] %>
+        <!-- Normal Dashboard -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="px-4 py-5 sm:p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Dashboard</h2>
+            <p class="text-gray-600 mb-6">Welcome to your TimekeepPh dashboard, <%= @account.name %>!</p>
 
-        <div class="mt-6">
-          <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
-            <h3 class="text-lg font-medium text-blue-900">Next: Employee Clock-in System</h3>
-            <p class="mt-2 text-sm text-blue-700">The selfie clock-in system for employees will be implemented next.</p>
+            <!-- Dashboard Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div class="bg-blue-50 p-4 rounded-lg">
+                <h3 class="text-lg font-medium text-blue-900">Active Employees</h3>
+                <p class="text-2xl font-bold text-blue-600"><%= @employees.count %></p>
+              </div>
+              <div class="bg-green-50 p-4 rounded-lg">
+                <h3 class="text-lg font-medium text-green-900">Branch Locations</h3>
+                <p class="text-2xl font-bold text-green-600"><%= @branches.count %></p>
+              </div>
+              <div class="bg-purple-50 p-4 rounded-lg">
+                <h3 class="text-lg font-medium text-purple-900">Today's Entries</h3>
+                <p class="text-2xl font-bold text-purple-600"><%= @recent_clock_entries.select { |e| e.created_at.today? }.count %></p>
+              </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <% if @recent_clock_entries.any? %>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Recent Clock Entries</h3>
+                <div class="space-y-2">
+                  <% @recent_clock_entries.first(5).each do |entry| %>
+                    <div class="flex justify-between items-center text-sm">
+                      <span><%= entry.employee.name %> - <%= entry.entry_type.humanize %></span>
+                      <span class="text-gray-500"><%= entry.created_at.strftime('%m/%d %H:%M') %></span>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+
+            <!-- Quick Actions -->
+            <div class="mt-6 flex space-x-4">
+              <% if current_user.admin? || current_user.hr? %>
+                <%= link_to "Manage Employees", "#", class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+                <%= link_to "Manage Branches", "#", class: "bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+              <% end %>
+              <%= link_to "Employee Clock-in", employee_login_path, class: "bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium", target: "_blank" %>
+            </div>
           </div>
         </div>
-      </div>
+      <% else %>
+        <!-- Setup Wizard -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="px-4 py-5 sm:p-6">
+            <div class="text-center mb-8">
+              <h2 class="text-3xl font-bold text-gray-900">Welcome to TimekeepPh!</h2>
+              <p class="mt-2 text-lg text-gray-600">Let's get your account set up in just a few steps.</p>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mb-8">
+              <div class="bg-gray-200 rounded-full h-2">
+                <% progress = [@setup_status[:password_changed], @setup_status[:branches_configured], @setup_status[:employees_added], @setup_status[:clock_in_tested]].count(true) %>
+                <div class="bg-blue-600 h-2 rounded-full" style="width: <%= (progress / 4.0 * 100).round %>%"></div>
+              </div>
+              <p class="text-sm text-gray-600 mt-2 text-center">Step <%= progress %> of 4 completed</p>
+            </div>
+
+            <!-- Setup Steps -->
+            <div class="space-y-6">
+              <!-- Step 1: Password -->
+              <div class="border rounded-lg p-4 <%= @setup_status[:password_changed] ? 'bg-green-50 border-green-200' : 'border-gray-200' %>">
+                <div class="flex items-center">
+                  <% if @setup_status[:password_changed] %>
+                    <div class="flex-shrink-0">
+                      <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <span class="text-green-600 font-bold">✓</span>
+                      </div>
+                    </div>
+                  <% else %>
+                    <div class="flex-shrink-0">
+                      <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span class="text-blue-600 font-bold">1</span>
+                      </div>
+                    </div>
+                  <% end %>
+                  <div class="ml-4 flex-1">
+                    <h3 class="text-lg font-medium <%= @setup_status[:password_changed] ? 'text-green-900' : 'text-gray-900' %>">
+                      Change Your Password
+                    </h3>
+                    <p class="text-sm text-gray-600">
+                      <%= @setup_status[:password_changed] ? 'Password updated successfully!' : 'Update your temporary password for security.' %>
+                    </p>
+                    <% unless @setup_status[:password_changed] %>
+                      <div class="mt-2">
+                        <%= link_to "Change Password", edit_user_registration_path, class: "inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 2: Branches -->
+              <div class="border rounded-lg p-4 <%= @setup_status[:branches_configured] ? 'bg-green-50 border-green-200' : 'border-gray-200' %>">
+                <div class="flex items-center">
+                  <% if @setup_status[:branches_configured] %>
+                    <div class="flex-shrink-0">
+                      <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <span class="text-green-600 font-bold">✓</span>
+                      </div>
+                    </div>
+                  <% else %>
+                    <div class="flex-shrink-0">
+                      <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span class="text-blue-600 font-bold">2</span>
+                      </div>
+                    </div>
+                  <% end %>
+                  <div class="ml-4 flex-1">
+                    <h3 class="text-lg font-medium <%= @setup_status[:branches_configured] ? 'text-green-900' : 'text-gray-900' %>">
+                      Configure Your Branches
+                    </h3>
+                    <p class="text-sm text-gray-600">
+                      <%= @setup_status[:branches_configured] ? 'Branch locations configured!' : 'Update your office/branch locations where employees will clock in.' %>
+                    </p>
+                    <% unless @setup_status[:branches_configured] %>
+                      <div class="mt-2">
+                        <%= link_to "Manage Branches", "#", class: "inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 3: Employees -->
+              <div class="border rounded-lg p-4 <%= @setup_status[:employees_added] ? 'bg-green-50 border-green-200' : 'border-gray-200' %>">
+                <div class="flex items-center">
+                  <% if @setup_status[:employees_added] %>
+                    <div class="flex-shrink-0">
+                      <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <span class="text-green-600 font-bold">✓</span>
+                      </div>
+                    </div>
+                  <% else %>
+                    <div class="flex-shrink-0">
+                      <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span class="text-blue-600 font-bold">3</span>
+                      </div>
+                    </div>
+                  <% end %>
+                  <div class="ml-4 flex-1">
+                    <h3 class="text-lg font-medium <%= @setup_status[:employees_added] ? 'text-green-900' : 'text-gray-900' %>">
+                      Add Your Employees
+                    </h3>
+                    <p class="text-sm text-gray-600">
+                      <%= @setup_status[:employees_added] ? "#{@employees.count} employees added!" : 'Add your team members with their Employee IDs and secure PINs.' %>
+                    </p>
+                    <% unless @setup_status[:employees_added] %>
+                      <div class="mt-2">
+                        <%= link_to "Add Employees", "#", class: "inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 4: Test Clock-in -->
+              <div class="border rounded-lg p-4 <%= @setup_status[:clock_in_tested] ? 'bg-green-50 border-green-200' : 'border-gray-200' %>">
+                <div class="flex items-center">
+                  <% if @setup_status[:clock_in_tested] %>
+                    <div class="flex-shrink-0">
+                      <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <span class="text-green-600 font-bold">✓</span>
+                      </div>
+                    </div>
+                  <% else %>
+                    <div class="flex-shrink-0">
+                      <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span class="text-blue-600 font-bold">4</span>
+                      </div>
+                    </div>
+                  <% end %>
+                  <div class="ml-4 flex-1">
+                    <h3 class="text-lg font-medium <%= @setup_status[:clock_in_tested] ? 'text-green-900' : 'text-gray-900' %>">
+                      Test Employee Clock-in
+                    </h3>
+                    <p class="text-sm text-gray-600">
+                      <%= @setup_status[:clock_in_tested] ? 'Clock-in system tested successfully!' : 'Test the selfie clock-in system with one of your employees.' %>
+                    </p>
+                    <% unless @setup_status[:clock_in_tested] %>
+                      <div class="mt-2">
+                        <%= link_to "Test Clock-in", employee_login_path,
+                            class: "inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700",
+                            target: "_blank" %>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Support Contact -->
+            <div class="mt-8 text-center">
+              <p class="text-sm text-gray-600">
+                Need help with setup?
+                <a href="mailto:support@timekeep.ph" class="text-blue-600 hover:text-blue-500">Contact our support team</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      <% end %>
     </div>
   </main>
 </div>

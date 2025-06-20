@@ -45,6 +45,51 @@ TimekeepPh is a Rails 8.0 application using:
 - `bin/kamal shell` - Remote shell access
 - `bin/kamal logs` - View application logs
 
+### Customer Onboarding (Multi-tenant)
+- `bin/rails onboarding:create_account['Company Name','subdomain','Admin Name','admin@email.com']` - Create new customer account
+- `bin/rails onboarding:list_accounts` - List all customer accounts with summary
+- `bin/rails onboarding:show_account[subdomain]` - Show detailed account information
+- `bin/rails onboarding:deactivate_account[subdomain]` - Deactivate customer account
+- `bin/rails onboarding:reactivate_account[subdomain]` - Reactivate customer account
+
+#### Rails Console Commands for Manual Account Management
+```ruby
+# Create account manually
+account = Account.create!(name: "Company Name", subdomain: "company-slug", active: true)
+
+# Create admin user
+password = SecureRandom.hex(8)
+user = User.create!(
+  account: account,
+  name: "Admin Name",
+  email: "admin@company.com",
+  password: password,
+  password_confirmation: password,
+  role: :admin
+)
+
+# Create default branch
+Branch.create!(
+  account: account,
+  name: "Main Office",
+  address: "Update this address",
+  active: true
+)
+
+# Find account by subdomain
+account = Account.find_by(subdomain: "company-slug")
+
+# Reset user password
+user = User.find_by(email: "admin@company.com")
+new_password = SecureRandom.hex(8)
+user.update!(password: new_password, password_confirmation: new_password)
+puts "New password: #{new_password}"
+
+# Check account activity
+account.clock_entries.today.count
+account.employees.active.count
+```
+
 ## Architecture
 
 ### Core Structure
@@ -156,6 +201,14 @@ This project follows principles from "Sustainable Rails" by David Bryant Copelan
 - [x] Employee PIN-based identification (frontend worker access)
 - [x] Tenant isolation validation (middleware enforces account boundaries)
 - [x] Strong parameters and validation (comprehensive model validations)
+
+### Customer Onboarding ✅ COMPLETED
+- [x] Rake tasks for account creation and management (onboarding:create_account, etc.)
+- [x] Rails console commands for manual account setup
+- [x] Guided setup wizard for new customers (4-step process)
+- [x] Setup completion detection and progress tracking
+- [x] Customer onboarding process documentation
+- [x] Account status management (activate/deactivate)
 
 ## Maintenance Instructions
 
